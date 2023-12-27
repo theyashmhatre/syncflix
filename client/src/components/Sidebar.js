@@ -13,7 +13,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
-import { Button, Input, Stack } from '@mui/material';
+import { Button, Chip, Input, Stack } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import SendIcon from '@mui/icons-material/Send';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -29,7 +29,7 @@ const drawerWidth = 300;
 export default function Sidebar() {
 
   const socket = useContext(SocketContext);
-  var { roomID, messageList } = useRoomContext();
+  var { room, messageList } = useRoomContext();
   const {user} = useAuth();
   const [messageText, setMessageText] = useState("");
   const bottomRef = useRef(null);
@@ -41,14 +41,13 @@ export default function Sidebar() {
   }
 
   function message_in_room(e) {
-    console.log(e.key);
     if (!e.key || e.key === "Enter"){
       const userData = {
         "name": user.displayName,
         "email": user.email,
         "photoURL": user.photoURL
       }
-      socket.emit("room message", { room: roomID, message: messageText, userData: userData, type: "chat" })
+      socket.emit("room message", { room: room.current, message: messageText, userData: userData, type: "chat" })
       messageList.push({ message: messageText, id: socket.id, userData: userData, type: "chat" })
       setSentMsgCount(prev => prev + 1);
       setMessageText("");
@@ -103,7 +102,8 @@ export default function Sidebar() {
                           <OtherChatCard message={msg.message} id={msg.id} userData={msg.userData} />
                           {messageList.length === index ? <></> : <Divider variant="middle" component="li" />}
                         </>
-                      : <p>{msg.message}</p>}
+                      : <><p><Chip label={msg.message} sx={{ fontSize: "11px" }} /></p>
+                       <Divider variant="middle" component="li" /></>}
                   </div>
                   <Box ref={bottomRef}></Box>
                 </div>

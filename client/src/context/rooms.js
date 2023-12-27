@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react"
+import React, { createContext, useContext, useRef, useState } from "react"
 
 const RoomContext = createContext();
 
@@ -7,11 +7,13 @@ export const useRoomContext = () => {
 }
 
 export const RoomProvider = ({ children }) => {
-  const [messageList, setMessageList] = React.useState([]);
-  const [roomID, setRoomID] = React.useState("");
+  const [messageList, setMessageList] = useState([]);
+  const room = useRef("");
+  const [usersList, setUsersList] = useState("");
   const state = {
-    roomID,
-    setRoomID,
+    room,
+    usersList,
+    setUsersList,
     messageList,
     setMessageList
   }

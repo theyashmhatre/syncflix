@@ -6,9 +6,11 @@ import reportWebVitals from './reportWebVitals';
 import { SocketContext, socket } from './context/socket';
 import { RoomProvider } from './context/rooms';
 import { AuthProvider } from './context/auth';
+import { AppStateProvider } from './context/appstate';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
+    <AppStateProvider>
     <AuthProvider>
       <SocketContext.Provider value={socket}>
         <RoomProvider>
@@ -16,6 +18,7 @@ root.render(
         </RoomProvider>
       </SocketContext.Provider>
     </AuthProvider>
+    </AppStateProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function

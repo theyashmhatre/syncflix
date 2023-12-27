@@ -10,9 +10,13 @@ import Options from './Party/Options';
 import CreateParty from './Party/CreateParty';
 import JoinParty from './Party/JoinParty';
 import { useRoomContext } from '../context/rooms';
+import { useAppStateContext } from '../context/appstate';
 import VideoLoad from './Video/VideoLoad';
 import VideoPlayer from './Video/VideoPlayer';
+import Chip from '@mui/material/Chip';
+import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import { useAuth } from '../context/auth';
+import VideoOptions from './Video/VideoOptions';
 
 export default function MainContent() {
 
@@ -21,18 +25,15 @@ export default function MainContent() {
     message: "",
     private_user: "",
   })
-  const [isCreate, setIsCreate] = useState(false);
-  const [isJoin, setIsJoin] = useState(false);
+  const { isCreate, setIsCreate, isJoin, setIsJoin, videoLoaded, setIsVideo } = useAppStateContext()
   const socket = useContext(SocketContext)
   const { user } = useAuth();
-  var {roomID, setRoomID, messageList, setMessageList} = useRoomContext();
-  const [video, setVideo] = useState({ preview: "", raw: "", visible: false, uploaded: false });
-  const videoLoaded = useRef(false);
+  var { room, usersList, setUsersList, messageList, setMessageList } = useRoomContext();
+  const [video, setVideo] = useState({ preview: "", raw: "", visible: false, link: '' });
   const bottomRef = useRef(null);
-  const videoRef = useRef(null);
   const [lastSeekFromServer, setLastSeekFromServer] = useState("");
 
-  function handleInput(e){
+  function handleInput(e) {
     e.preventDefault();
     setData({
       ...data,
@@ -51,17 +52,30 @@ export default function MainContent() {
 
     if (event.type === "ratechange") {
 
-      socket.emit(event.type, { room: roomID, rate: event.target.playbackRate, userData: userData, type: "info" })
+      socket.emit(event.type, { room: room.current, rate: event.target.playbackRate, userData: userData, type: "info" })
       return;
     }
 
-    socket.emit(event.type, { room: roomID, time: event.target.currentTime, userData:userData, type:"info" })
+    socket.emit(event.type, { room: room.current, time: event.target.currentTime, userData: userData, type: "info" })
   }
 
   useEffect(() => {
+    const handleTabClose = event => {
+      event.preventDefault();
+
+      console.log(`beforeunload event triggeredx ${room.current}.`);
+      socket.emit("connections_updated", {roomID: room.current, id: socket.id})
+      socket.disconnect();
+
+      return (event.returnValue =
+        'Are you sure you want to exit?');
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+
     if (socket) {
-      socket.on("room message", ({message, id, userData, type}) => {
-        setMessageList(prev => [...prev, {message, id, userData, type}])
+      socket.on("room message", ({ message, id, userData, type }) => {
+        setMessageList(prev => [...prev, { message, id, userData, type }])
       });
       socket.on("play", (time, message, userData, type) => {
         play(time)
@@ -80,10 +94,16 @@ export default function MainContent() {
       });
 
       socket.on("ratechange", (speed, message, userData, type) => {
-        console.log("playback speed received ",speed)
+        console.log("playback speed received ", speed)
         document.getElementById("video").playbackRate = speed;
         setMessageList(prev => [...prev, { message, userData, type }])
       });
+
+      socket.on("connections_updated", (users) => {
+        console.log(users);
+        setUsersList([...users])
+        console.log(usersList);
+      })
 
       socket.on("ended", (time) => {
         console.log("ended", time);
@@ -91,8 +111,13 @@ export default function MainContent() {
 
       socket.on('disconnect', () => {
         socket.removeAllListeners();
+        
       });
     }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+    };
   }, [])
 
   useEffect(() => {
@@ -105,12 +130,14 @@ export default function MainContent() {
   };
 
   function join_room(roomID) {
-    socket.emit("join_room", roomID)
-    setRoomID(roomID);
+    socket.emit("join_room", {roomID: roomID, data: {email: user.email, name: user.displayName, photoURL: user.photoURL}})
+    console.log(user);
+    room.current = roomID
     setData({
       ...data,
-      room: "",
-    })  
+      room: roomID,
+    })
+    console.log(roomID);
   }
 
   // function message_in_room() {
@@ -129,28 +156,42 @@ export default function MainContent() {
   //   })
   // }
 
-  const loadVideo = (e, join_new_room=false) => {
-    if (e.target.files[0]) {
-        setVideo(video => {
-          return {
+  const loadVideo = (e, join_new_room, link) => {
+    console.log(room.current, data.room)
+    if (link) {
+      setVideo(video => {
+        return {
+          preview: '',
+          link: link, //Offline preview url
+          raw: 'e.target.files[0]',
+          visible: true,
+        }
+      }
+      );
+      videoLoaded.current = true;
+      setIsVideo(true);
+    }
+    else if (e.target.files[0]) {
+      setVideo(video => {
+        return {
           preview: URL.createObjectURL(e.target.files[0]), //Offline preview url
           raw: e.target.files[0],
           visible: true,
-          uploaded: false,
-        }}
-        );
-        videoLoaded.current = true;
-
-        if (join_new_room){
-          const room = generateRandomString().toUpperCase()
-
-          join_room(room)
-          localStorage.setItem("roomID", room)
-          setRoomID(room)
         }
-
+      }
+      );
+      videoLoaded.current = true;
+      setIsVideo(true);
     }
 
+    if (join_new_room) {
+      const roomID = generateRandomString().toUpperCase()
+
+      join_room(roomID)
+      localStorage.setItem("roomID", roomID)
+      room.current = roomID
+    }
+    console.log(isCreate, isJoin, videoLoaded.current);
   };
 
   function onSeeked(e) {
@@ -162,7 +203,7 @@ export default function MainContent() {
     }
 
     if (parseFloat(timestamp).toFixed(2) !== parseFloat(lastSeekFromServer).toFixed(2)) { // NEW CODE
-      socket.emit("seekdone", { room: roomID, time: e.target.currentTime, userData: userData, type: "info" });
+      socket.emit("seekdone", { room: room.current, time: e.target.currentTime, userData: userData, type: "info" });
 
     }
   }
@@ -172,7 +213,7 @@ export default function MainContent() {
     var isPlaying = videoPlayer.currentTime > 0 && !videoPlayer.paused && !videoPlayer.ended
       && videoPlayer.readyState > videoPlayer.HAVE_CURRENT_DATA;
 
-    if (videoLoaded.current && !isPlaying){
+    if (videoLoaded.current && !isPlaying) {
       videoPlayer.play()
     }
   }
@@ -190,35 +231,43 @@ export default function MainContent() {
 
   return (
     <Box mt={8} zIndex={0} component="main"
-      sx={{ flexGrow: 1, px: 3, pt:1, width: { sm: `calc(100% - ${300}px)` } }}>
+      sx={{ flexGrow: 1, px: 3, pt: 1, width: { sm: (isJoin || isCreate) && videoLoaded.current ? `calc(100% - ${300}px)` : '100%' } }}>
 
-      {!(isCreate || isJoin) ? 
-        <Options setIsCreate={setIsCreate} setIsJoin={setIsJoin} /> 
-        :        
-        isCreate ? 
-        <CreateParty 
-          video = {video}
-          loadVideo = {loadVideo}
-          onSeeked={onSeeked}
-          handleEvent={handleEvent}
-          roomID={roomID} 
-        /> 
-        : 
+      {isCreate || isJoin ?
+        <Stack direction="row" spacing={1} sx={{ marginY: "10px" }} style={{clear: "right"}}>
+          <Chip avatar={<KeyboardBackspaceIcon />} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
+          />
+        </Stack>
+        : <></>}
+
+      {!(isCreate || isJoin) ?
+        <Options setIsCreate={setIsCreate} setIsJoin={setIsJoin} />
+        :
+        isCreate ?
+          <CreateParty
+            video={video}
+            loadVideo={loadVideo}
+            onSeeked={onSeeked}
+            handleEvent={handleEvent}
+            roomID={room.current}
+          />
+          :
           <div>
-            {roomID ?
+            {room.current ?
               <>
-              
-                {video.preview ?
+
+                {videoLoaded.current ?
                   <>
-                    <VideoPlayer 
+                    <VideoPlayer
                       video={video}
                       onSeeked={onSeeked}
                       handleEvent={handleEvent}
-                      roomID={roomID}
-                      />
-                  </> 
-                  : 
-                  <VideoLoad loadVideo={loadVideo} createRoom={false} roomID={roomID} />}
+                      roomID={room.current}
+                    />
+                  </>
+                  :
+                  <VideoOptions loadVideo={loadVideo} isCreateRoom={false} roomID={room.current} />}
+                }
               </> :
               <>
                 <input type="text"
@@ -228,7 +277,7 @@ export default function MainContent() {
                 <Button onClick={() => { join_room(data.room) }}>Connect</Button>
               </>}
           </div>
-        }
+      }
     </Box>
   )
 }
