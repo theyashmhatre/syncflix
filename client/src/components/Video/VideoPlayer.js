@@ -30,7 +30,7 @@ export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
   return (
     <Grid container>
       
-      <Grid item xs={12} mt="10px">
+      <Grid item xs={12} >
         <Box color="black" bggradient="linear(to-r, #74ebd5, #ACB6E5)" overflow="hidden" margin="auto" height="70vh">
           {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }} controls={isControl ? true: false}>
             <source src={video.preview} type="video/mp4" />
@@ -43,23 +43,25 @@ export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
         </Box>
       </Grid>
 
-      <Grid container xs={6} height="3rem" p={"5px"} textAlign={'left'} spacing={2}>
-        <Grid item xs={3} textAlign={"end"}>
-          <Typography ><span style={{ "fontWeight": "900", "fontSize": "large" }}>#{roomID}</span></Typography>
+      <Stack direction={"row"} width={"100%"} justifyContent={"space-between"} pt="15px">
+        <Grid container height="3rem" textAlign={'left'} spacing={2}>
+          <Grid item >
+            <Typography ><span style={{ "fontWeight": "900", "fontSize": "large" }}>#{roomID}</span></Typography>
+          </Grid>
+          <Grid item>
+            <Tooltip open={open} onClose={handleClose} title="Text Copied!" placement="right">
+              <ContentCopyIcon fontSize='medium' style={{ "color": "grey" }} onClick={() => { navigator.clipboard.writeText(roomID); handleOpen() }} sx={{ ":hover": { cursor: "pointer" } }} />
+            </Tooltip>
+          </Grid>
         </Grid>
-        <Grid item xs={1}>
-          <Tooltip open={open} onClose={handleClose} title="Text Copied!" placement="right">
-            <ContentCopyIcon fontSize='medium' style={{ "color": "grey" }} onClick={() => { navigator.clipboard.writeText(roomID); handleOpen() }} sx={{ ":hover": { cursor: "pointer" } }} />
-          </Tooltip>
-        </Grid>
-      </Grid>
 
 
-      <Grid item xs={2} mt="10px">
-        <IconButton sx={{ "borderRadius": "5px", "backgroundColor": "#8C52FF" }}>
-          <SettingsIcon fontSize="large" style={{ "color": "white" }} />
-        </IconButton>
-      </Grid>
+        <Grid item >
+          <IconButton sx={{ "borderRadius": "5px", "backgroundColor": "#8C52FF" }}>
+            <SettingsIcon style={{ "color": "white" }} />
+          </IconButton>
+        </Grid>
+      </Stack>
 
     </Grid>
   )

@@ -1,4 +1,4 @@
-import { Avatar, Box, Chip, Stack, Typography } from '@mui/material'
+import { Avatar, AvatarGroup, Box, Chip, Stack, Typography } from '@mui/material'
 import React from 'react'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VideoPlayer from '../Video/VideoPlayer';
@@ -15,18 +15,20 @@ export default function CreateParty({ video, loadVideo, onSeeked, handleEvent, r
   const { usersList } = useRoomContext()
 
   return (
-    <Box color="black" bgGradient="linear(to-r, #74ebd5, #ACB6E5)" borderRadius="5px" margin="auto">
+    <Stack color="black" bgGradient="linear(to-r, #74ebd5, #ACB6E5)" margin="auto" padding={"20px"}>
 
-      <Stack direction="row" justifyContent="space-between" sx={{ p: "10px" }}>
+      <Stack direction="row" justifyContent="space-between" sx={{ p: "0px 0px 10px 0px" }}>
         <Stack direction="row" spacing={1} >
-          <Chip avatar={<KeyboardBackspaceIcon />} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
+          <Chip avatar={<KeyboardBackspaceIcon />} sx={{p:"20px 5px", borderRadius:"10px"}} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
           />
         </Stack>
-        {usersList.length ? usersList.map((user, index) => {
-          return (
-            <Avatar src={user.photoURL ? user.photoURL : "/static/images/avatar/2.jpg"} key={index} alt={user.name} />
-          )
-        }) : <></>}
+        <AvatarGroup max={4} total={usersList.length}>
+          {usersList.length ? usersList.map((user, index) => {
+            return (
+              <Avatar src={user.photoURL ? user.photoURL : "/static/images/avatar/2.jpg"} key={index} alt={user.name} />
+            )
+          }) : <></>}
+        </AvatarGroup>
         <Typography fontSize={"30px"}></Typography>
       </Stack>
 
@@ -38,6 +40,6 @@ export default function CreateParty({ video, loadVideo, onSeeked, handleEvent, r
           roomID={roomID}
         /> :
         <VideoOptions loadVideo={loadVideo} isCreateRoom={true} roomID={roomID} />}
-    </Box>
+    </Stack>
   )
 }

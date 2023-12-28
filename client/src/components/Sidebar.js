@@ -1,10 +1,10 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
-import { Button, Chip, Input, Stack } from '@mui/material';
+import { Badge, Button, Chip, Input, Stack } from '@mui/material';
 import { SocketContext } from '../context/socket';
 import { useRoomContext } from '../context/rooms';
 import { useAuth } from '../context/auth';
@@ -13,6 +13,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import { grey } from '@mui/material/colors';
 import MessageList from './Chat/MessageList';
 import MessageInput from './Chat/MessageInput';
+import UserList from './User/UserList';
 
 const drawerWidth = 300;
 
@@ -21,19 +22,24 @@ export default function Sidebar() {
   var { messageList } = useRoomContext();
   const bottomRef = useRef(null);
   const [sentMsgCount, setSentMsgCount] = useState(0)
+  const [sideSection, setSideSection] = useState("chat");
 
-  
+  function toggleSection(section) {
+    setSideSection(section);
+  }
+
+
 
   useEffect(() => {
     // 👇️ scroll to bottom every time messages change
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messageList, sentMsgCount]);
-  
+
 
   return (
-    <Box sx={{ display: 'flex'}} zIndex={0}>  
-      <CssBaseline /> 
-      
+    <Box sx={{ display: 'flex' }} zIndex={0}>
+      <CssBaseline />
+
       <Drawer
         sx={{
           width: drawerWidth,
@@ -46,27 +52,41 @@ export default function Sidebar() {
         variant="permanent"
         anchor="right"
       >
-        <List sx={{ width: '100%', mt: "3.5rem", mb:"3rem", maxWidth: 360 }}>
-         <Box position="sticky" top="4rem" width={drawerWidth} zIndex={3} bgcolor="white" >
-            <Stack direction="row"  borderBottom="1px solid grey">
-              <Box p="15px 0px"  display="flex" justifyContent={'center'} width={"50%"} >
-                <ChatIcon sx={{ color: grey[600] }} />
+        <List sx={{ width: '100%', mt: "3.5rem", mb: "3rem", maxWidth: 360 }}>
+          <Box position="sticky" top="4rem" width={drawerWidth} zIndex={3} bgcolor="white" >
+            <Stack direction="row" borderBottom="1px solid grey">
+              <Box p="15px 0px" display="flex" justifyContent={'center'} width={"50%"} sx={{ ":hover": { cursor: "pointer" }, '&:hover .chat-icon': { color: sideSection === "people" ? "#8C52FF" : "gray" } }} onClick={(e) => toggleSection("chat")} >
+                {/* <Badge badgeContent={5} color="success" anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}> */}
+                <ChatIcon className='chat-icon' sx={{ color: sideSection === "chat" ? "#8C52FF" : "gray" }}/>
+                {/* </Badge>  */}
 
               </Box>
               <Divider orientation="vertical" flexItem />
-              <Box p="15px 5px" display="flex" textAlign="start" justifyContent={'center'} width={"50%"}>
-                <PeopleIcon sx={{ color: grey[600] }} />
+              <Box p="15px 5px" display="flex" textAlign="start" justifyContent={'center'} width={"50%"} onClick={(e) => toggleSection("people")} sx={{ ":hover": { cursor: "pointer" }, '&:hover .people-icon': { color: sideSection === "chat" ? "#8C52FF" : "gray" } }}>
+                <PeopleIcon className='people-icon' sx={{ color: sideSection === "people" ? "#8C52FF" : "gray" }} />
 
               </Box>
             </Stack>
-         </Box>
-        
-        <MessageList bottomRef={bottomRef} />
+          </Box>
+
+          {!sideSection || sideSection === "chat" ?
+            <MessageList bottomRef={bottomRef} />
+            :
+            <UserList />
+          }
+
 
         </List>
-        
-        <MessageInput setSentMsgCount={setSentMsgCount} />
-        
+
+        {!sideSection || sideSection === "chat" ?
+          <MessageInput setSentMsgCount={setSentMsgCount} />
+          :
+          <></>
+        }
+
       </Drawer>
     </Box>
   );

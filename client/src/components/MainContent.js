@@ -63,7 +63,7 @@ export default function MainContent() {
       event.preventDefault();
 
       console.log(`beforeunload event triggeredx ${room.current}.`);
-      socket.emit("connections_updated", {roomID: room.current, id: socket.id})
+      socket.emit("connections_updated", { roomID: room.current, id: socket.id })
       socket.disconnect();
 
       return (event.returnValue =
@@ -110,7 +110,7 @@ export default function MainContent() {
 
       socket.on('disconnect', () => {
         socket.removeAllListeners();
-        
+
       });
     }
 
@@ -130,7 +130,7 @@ export default function MainContent() {
 
   function join_room(roomID, isAdmin) {
     const userData = { roomID: roomID, data: { email: user.email, name: user.displayName, photoURL: user.photoURL } }
-    if (isAdmin){
+    if (isAdmin) {
       userData.isAdmin = true;
     }
     socket.emit("join_room", userData)
@@ -264,7 +264,7 @@ export default function MainContent() {
                   :
                   <VideoOptions loadVideo={loadVideo} isCreateRoom={false} roomID={room.current} />
                 }
-                
+
               </> :
               <>
                 <input type="text"
@@ -272,7 +272,8 @@ export default function MainContent() {
                   name="room"
                   onChange={handleInput} />
                 <Button onClick={() => { join_room(data.room, false) }}>Connect</Button>
-              </>}
+              </>
+            }
           </div>
       }
     </Box>
