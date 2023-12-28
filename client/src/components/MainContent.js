@@ -14,7 +14,6 @@ import { useAppStateContext } from '../context/appstate';
 import VideoLoad from './Video/VideoLoad';
 import VideoPlayer from './Video/VideoPlayer';
 import Chip from '@mui/material/Chip';
-import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 import { useAuth } from '../context/auth';
 import VideoOptions from './Video/VideoOptions';
 
@@ -129,8 +128,12 @@ export default function MainContent() {
     return Math.floor(Math.random() * Date.now()).toString(36);
   };
 
-  function join_room(roomID) {
-    socket.emit("join_room", {roomID: roomID, data: {email: user.email, name: user.displayName, photoURL: user.photoURL}})
+  function join_room(roomID, isAdmin) {
+    const userData = { roomID: roomID, data: { email: user.email, name: user.displayName, photoURL: user.photoURL } }
+    if (isAdmin){
+      userData.isAdmin = true;
+    }
+    socket.emit("join_room", userData)
     console.log(user);
     room.current = roomID
     setData({
@@ -187,7 +190,7 @@ export default function MainContent() {
     if (join_new_room) {
       const roomID = generateRandomString().toUpperCase()
 
-      join_room(roomID)
+      join_room(roomID, true)
       localStorage.setItem("roomID", roomID)
       room.current = roomID
     }
@@ -231,14 +234,7 @@ export default function MainContent() {
 
   return (
     <Box mt={8} zIndex={0} component="main"
-      sx={{ flexGrow: 1, px: 3, pt: 1, width: { sm: (isJoin || isCreate) && videoLoaded.current ? `calc(100% - ${300}px)` : '100%' } }}>
-
-      {isCreate || isJoin ?
-        <Stack direction="row" spacing={1} sx={{ marginY: "10px" }} style={{clear: "right"}}>
-          <Chip avatar={<KeyboardBackspaceIcon />} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
-          />
-        </Stack>
-        : <></>}
+      sx={{ flexGrow: 1, width: { sm: (isJoin || isCreate) && videoLoaded.current ? `calc(100% - ${300}px)` : '100%' } }}>
 
       {!(isCreate || isJoin) ?
         <Options setIsCreate={setIsCreate} setIsJoin={setIsJoin} />
@@ -266,15 +262,16 @@ export default function MainContent() {
                     />
                   </>
                   :
-                  <VideoOptions loadVideo={loadVideo} isCreateRoom={false} roomID={room.current} />}
+                  <VideoOptions loadVideo={loadVideo} isCreateRoom={false} roomID={room.current} />
                 }
+                
               </> :
               <>
                 <input type="text"
                   value={data.room}
                   name="room"
                   onChange={handleInput} />
-                <Button onClick={() => { join_room(data.room) }}>Connect</Button>
+                <Button onClick={() => { join_room(data.room, false) }}>Connect</Button>
               </>}
           </div>
       }

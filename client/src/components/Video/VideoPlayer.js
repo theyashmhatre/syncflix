@@ -29,17 +29,7 @@ export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
 
   return (
     <Grid container>
-      <Grid item xs={6}>
-        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-          {usersList.length? usersList.map((user, index) => {
-            return (
-              <Avatar src={user.photoURL ?  user.photoURL : "/static/images/avatar/2.jpg"} key={index} alt={user.name} />
-            )
-          }) : <></>}
-          <Typography fontSize={"30px"}>+</Typography>
-        </Stack>
-
-      </Grid>
+      
       <Grid item xs={12} mt="10px">
         <Box color="black" bggradient="linear(to-r, #74ebd5, #ACB6E5)" overflow="hidden" margin="auto" height="70vh">
           {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }} controls={isControl ? true: false}>

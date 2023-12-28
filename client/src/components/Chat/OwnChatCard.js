@@ -9,7 +9,7 @@ export default function OwnChatCard({message, id, userData}) {
   return (
     <ListItem alignItems="flex-start">
       <ListItemText
-        primary={id}
+        primary={userData.name}
         secondary={
           <React.Fragment>
             {message}

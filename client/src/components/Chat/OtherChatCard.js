@@ -12,7 +12,7 @@ export default function OtherChatCard({message, id, userData}) {
         <Avatar alt="Hohn Sharp" src={userData.photoURL} />
       </ListItemAvatar> 
       <ListItemText
-        primary={id}
+        primary={userData.name}
         secondary={
           <React.Fragment>
             {message}
