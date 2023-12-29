@@ -53,9 +53,9 @@ export default function Sidebar() {
         anchor="right"
       >
         <List sx={{ width: '100%', mt: "3.5rem", mb: "3rem", maxWidth: 360 }}>
-          <Box position="sticky" top="4rem" width={drawerWidth} zIndex={3} bgcolor="white" >
-            <Stack direction="row" borderBottom="1px solid grey">
-              <Box p="15px 0px" display="flex" justifyContent={'center'} width={"50%"} sx={{ ":hover": { cursor: "pointer" }, '&:hover .chat-icon': { color: sideSection === "people" ? "#8C52FF" : "gray" } }} onClick={(e) => toggleSection("chat")} >
+          <Box position="sticky" top="4rem" width={drawerWidth} zIndex={3} >
+            <Stack direction="row">
+              <Box p="15px 0px" display="flex" borderBottom={sideSection === "chat"? "" : "1px solid grey"} bgcolor={sideSection === "chat" ? "white" : grey[200]} justifyContent={'center'} width={"50%"} sx={{ ":hover": { cursor: "pointer" }, '&:hover .chat-icon': { color: sideSection === "people" ? "#8C52FF" : "gray" } }} onClick={(e) => toggleSection("chat")} >
                 {/* <Badge badgeContent={5} color="success" anchorOrigin={{
                   vertical: 'bottom',
                   horizontal: 'right',
@@ -65,7 +65,7 @@ export default function Sidebar() {
 
               </Box>
               <Divider orientation="vertical" flexItem />
-              <Box p="15px 5px" display="flex" textAlign="start" justifyContent={'center'} width={"50%"} onClick={(e) => toggleSection("people")} sx={{ ":hover": { cursor: "pointer" }, '&:hover .people-icon': { color: sideSection === "chat" ? "#8C52FF" : "gray" } }}>
+              <Box p="15px 5px" display="flex" borderBottom={sideSection === "people" ? "" : "1px solid grey"} textAlign="start" bgcolor={sideSection === "people" ? "white" : grey[300]} justifyContent={'center'} width={"50%"} onClick={(e) => toggleSection("people")} sx={{ ":hover": { cursor: "pointer" }, '&:hover .people-icon': { color: sideSection === "chat" ? "#8C52FF" : "gray" } }}>
                 <PeopleIcon className='people-icon' sx={{ color: sideSection === "people" ? "#8C52FF" : "gray" }} />
 
               </Box>

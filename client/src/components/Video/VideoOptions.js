@@ -20,7 +20,7 @@ export default function VideoOptions({ loadVideo, isCreateRoom, roomID }) {
 
     setTimeout(() => {
       setIsLoading(false);
-      loadVideo(e, isCreateRoom, temp);
+      loadVideo(e, temp);
     }, 3000);
   }
 

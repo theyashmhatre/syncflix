@@ -33,7 +33,7 @@ export default function MessageInput({setSentMsgCount}) {
 
   return (
     <>
-      <Box p="3px" bgcolor="white" position="fixed" bottom="0px" borderRadius="5px 5px 0px 0px">
+      <Box p="3px" bgcolor="white" position="fixed" bottom="0px" borderTop={"1px solid gray"}>
         <Stack direction="row" borderRadius="5px" p="5px" m="10px">
 
           <textarea onSubmit={message_in_room} onChange={handleInput} value={messageText} onKeyDown={message_in_room} placeholder='Your message...' style={{ border: "none", outline: 0, width: "15rem", resize: "none" }} />

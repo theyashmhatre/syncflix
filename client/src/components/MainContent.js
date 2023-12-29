@@ -7,15 +7,16 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Options from './Party/Options';
-import CreateParty from './Party/CreateParty';
 import JoinParty from './Party/JoinParty';
 import { useRoomContext } from '../context/rooms';
 import { useAppStateContext } from '../context/appstate';
-import VideoLoad from './Video/VideoLoad';
-import VideoPlayer from './Video/VideoPlayer';
 import Chip from '@mui/material/Chip';
 import { useAuth } from '../context/auth';
-import VideoOptions from './Video/VideoOptions';
+import Create from './Party/Create';
+import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
+import {db} from "../firebase"
+import { doc, setDoc } from "firebase/firestore"; 
+import { useNavigate } from 'react-router-dom';
 
 export default function MainContent() {
 
@@ -23,14 +24,13 @@ export default function MainContent() {
     room: "",
     message: "",
     private_user: "",
+    partyTitle: ""
   })
-  const { isCreate, setIsCreate, isJoin, setIsJoin, videoLoaded, setIsVideo } = useAppStateContext()
+  const { isCreate, setIsCreate, isJoin, setIsJoin, videoLoaded } = useAppStateContext()
   const socket = useContext(SocketContext)
   const { user } = useAuth();
-  var { room, usersList, setUsersList, messageList, setMessageList } = useRoomContext();
-  const [video, setVideo] = useState({ preview: "", raw: "", visible: false, link: '' });
-  const bottomRef = useRef(null);
-  const [lastSeekFromServer, setLastSeekFromServer] = useState("");
+  const navigate = useNavigate();
+  var { room } = useRoomContext();
 
   function handleInput(e) {
     e.preventDefault();
@@ -40,108 +40,39 @@ export default function MainContent() {
     })
   }
 
-  function handleEvent(event) {
-    // use a switch/case to check for each event
-    const userData = {
-      "name": user.displayName,
-      "email": user.email,
-      "photoURL": user.photoURL
-    }
-    console.log(`handleEvent ${event.type}\n ${event.target.currentTime} ${event.target.playbackRate}`);
-
-    if (event.type === "ratechange") {
-
-      socket.emit(event.type, { room: room.current, rate: event.target.playbackRate, userData: userData, type: "info" })
-      return;
-    }
-
-    socket.emit(event.type, { room: room.current, time: event.target.currentTime, userData: userData, type: "info" })
-  }
-
-  useEffect(() => {
-    const handleTabClose = event => {
-      event.preventDefault();
-
-      console.log(`beforeunload event triggeredx ${room.current}.`);
-      socket.emit("connections_updated", { roomID: room.current, id: socket.id })
-      socket.disconnect();
-
-      return (event.returnValue =
-        'Are you sure you want to exit?');
-    };
-
-    window.addEventListener('beforeunload', handleTabClose);
-
-    if (socket) {
-      socket.on("room message", ({ message, id, userData, type }) => {
-        setMessageList(prev => [...prev, { message, id, userData, type }])
-      });
-      socket.on("play", (time, message, userData, type) => {
-        play(time)
-      });
-      socket.on("pause", (time, message, userData, type) => {
-        pause()
-      });
-      socket.on("seekdone", (timestamp, message, userData, type) => {
-        console.log("server seeked seekdone", timestamp, message);
-        setLastSeekFromServer(timestamp)
-        if (videoLoaded.current) {
-          document.getElementById("video").currentTime = timestamp;
-        }
-        setMessageList(prev => [...prev, { message, userData, type }])
-        pause()
-      });
-
-      socket.on("ratechange", (speed, message, userData, type) => {
-        console.log("playback speed received ", speed)
-        document.getElementById("video").playbackRate = speed;
-        setMessageList(prev => [...prev, { message, userData, type }])
-      });
-
-      socket.on("connections_updated", (users) => {
-        console.log(users);
-        setUsersList([...users])
-        console.log(usersList);
-      })
-
-      socket.on("ended", (time) => {
-        console.log("ended", time);
-      });
-
-      socket.on('disconnect', () => {
-        socket.removeAllListeners();
-
-      });
-    }
-
-    return () => {
-      window.removeEventListener('beforeunload', handleTabClose);
-    };
-  }, [])
-
-  useEffect(() => {
-    // 👇️ scroll to bottom every time messages change
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messageList]);
-
   const generateRandomString = () => {
     return Math.floor(Math.random() * Date.now()).toString(36);
   };
 
-  function join_room(roomID, isAdmin) {
+  async function join_room(roomID, isAdmin, redirect) {
+    if (!roomID) {
+      roomID = generateRandomString().toUpperCase();
+    }
     const userData = { roomID: roomID, data: { email: user.email, name: user.displayName, photoURL: user.photoURL } }
     if (isAdmin) {
       userData.isAdmin = true;
+      await setDoc(doc(db, "Parties", roomID), {
+        title: data.partyTitle,
+        roomID: roomID,
+        createdAt: new Date(),
+        admin: {email: user.email, photoURL: user.photoURL, name: user.displayName},
+        videoType: "",
+        allAdmins: [user.email]
+      });
     }
-    socket.emit("join_room", userData)
-    console.log(user);
-    room.current = roomID
-    setData({
-      ...data,
-      room: roomID,
-    })
-    console.log(roomID);
+
+    if (redirect){
+      navigate("/party/" + roomID)
+    }
   }
+
+  // function generate_roomID_and_join() {
+  //   const roomID = generateRandomString().toUpperCase();
+
+  //   join_room(roomID, true)
+  //   localStorage.setItem("roomID", roomID)
+  //   room.current = roomID
+  // }
 
   // function message_in_room() {
   //   socket.emit("room message", {room: roomID, message: data.message})
@@ -159,78 +90,6 @@ export default function MainContent() {
   //   })
   // }
 
-  const loadVideo = (e, join_new_room, link) => {
-    console.log(room.current, data.room)
-    if (link) {
-      setVideo(video => {
-        return {
-          preview: '',
-          link: link, //Offline preview url
-          raw: 'e.target.files[0]',
-          visible: true,
-        }
-      }
-      );
-      videoLoaded.current = true;
-      setIsVideo(true);
-    }
-    else if (e.target.files[0]) {
-      setVideo(video => {
-        return {
-          preview: URL.createObjectURL(e.target.files[0]), //Offline preview url
-          raw: e.target.files[0],
-          visible: true,
-        }
-      }
-      );
-      videoLoaded.current = true;
-      setIsVideo(true);
-    }
-
-    if (join_new_room) {
-      const roomID = generateRandomString().toUpperCase()
-
-      join_room(roomID, true)
-      localStorage.setItem("roomID", roomID)
-      room.current = roomID
-    }
-    console.log(isCreate, isJoin, videoLoaded.current);
-  };
-
-  function onSeeked(e) {
-    var timestamp = e.target.currentTime;
-    const userData = {
-      "name": user.displayName,
-      "email": user.email,
-      "photoURL": user.photoURL
-    }
-
-    if (parseFloat(timestamp).toFixed(2) !== parseFloat(lastSeekFromServer).toFixed(2)) { // NEW CODE
-      socket.emit("seekdone", { room: room.current, time: e.target.currentTime, userData: userData, type: "info" });
-
-    }
-  }
-
-  function play(time) {
-    var videoPlayer = document.getElementById("video");
-    var isPlaying = videoPlayer.currentTime > 0 && !videoPlayer.paused && !videoPlayer.ended
-      && videoPlayer.readyState > videoPlayer.HAVE_CURRENT_DATA;
-
-    if (videoLoaded.current && !isPlaying) {
-      videoPlayer.play()
-    }
-  }
-
-  function pause() {
-    var videoPlayer = document.getElementById("video");
-    var isPlaying = videoPlayer.currentTime > 0 && !videoPlayer.paused && !videoPlayer.ended
-      && videoPlayer.readyState > videoPlayer.HAVE_CURRENT_DATA;
-
-    if (videoLoaded.current && isPlaying) {
-      videoPlayer.pause()
-    }
-  }
-
 
   return (
     <Box mt={8} zIndex={0} component="main"
@@ -239,42 +98,18 @@ export default function MainContent() {
       {!(isCreate || isJoin) ?
         <Options setIsCreate={setIsCreate} setIsJoin={setIsJoin} />
         :
-        isCreate ?
-          <CreateParty
-            video={video}
-            loadVideo={loadVideo}
-            onSeeked={onSeeked}
-            handleEvent={handleEvent}
-            roomID={room.current}
-          />
-          :
-          <div>
-            {room.current ?
-              <>
+        <>
+          <Stack direction="row" spacing={1} padding={"20px"} >
+            <Chip avatar={<KeyboardBackspaceIcon />} sx={{ p: "20px 5px", borderRadius: "10px" }} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
+            />
+          </Stack>
+          {isCreate ?
 
-                {videoLoaded.current ?
-                  <>
-                    <VideoPlayer
-                      video={video}
-                      onSeeked={onSeeked}
-                      handleEvent={handleEvent}
-                      roomID={room.current}
-                    />
-                  </>
-                  :
-                  <VideoOptions loadVideo={loadVideo} isCreateRoom={false} roomID={room.current} />
-                }
+            <Create join_room={join_room} data={data} handleInput={handleInput} />
+            :
+            <JoinParty data={data} handleInput={handleInput} join_room={join_room} />}
+        </>
 
-              </> :
-              <>
-                <input type="text"
-                  value={data.room}
-                  name="room"
-                  onChange={handleInput} />
-                <Button onClick={() => { join_room(data.room, false) }}>Connect</Button>
-              </>
-            }
-          </div>
       }
     </Box>
   )

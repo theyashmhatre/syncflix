@@ -1,16 +1,22 @@
 import { Box, Grid, IconButton, Stack, Typography, useScrollTrigger } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import SettingsIcon from '@mui/icons-material/Settings';
 import Avatar from '@mui/material/Avatar';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Tooltip from '@mui/material/Tooltip';
 import { useRoomContext } from '../../context/rooms';
+import { useAppStateContext } from '../../context/appstate';
+import { SocketContext } from '../../context/socket';
+import { useAuth } from '../../context/auth';
 
-export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
+export default function VideoPlayer({ video, roomID }) {
 
   const [open, setOpen] = React.useState(false);
   const [isControl, setControl] = useState(true);
-  const {usersList} = useRoomContext()
+  const {usersList} = useRoomContext();
+  const socket = useContext(SocketContext);
+  const { user } = useAuth();
+  const {room, lastSeekFromServer} = useRoomContext();
 
   const handleClose = () => {
     setOpen(false);
@@ -26,6 +32,38 @@ export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
     }, 3000);
   };
 
+  function handleEvent(event) {
+    // use a switch/case to check for each event
+    const userData = {
+      "name": user.displayName,
+      "email": user.email,
+      "photoURL": user.photoURL
+    }
+    console.log(`handleEvent ${event.type}\n ${event.target.currentTime} ${event.target.playbackRate}`);
+
+    if (event.type === "ratechange") {
+
+      socket.emit(event.type, { room: room.current, rate: event.target.playbackRate, userData: userData, type: "info" })
+      return;
+    }
+
+    socket.emit(event.type, { room: room.current, time: event.target.currentTime, userData: userData, type: "info" })
+  }
+
+  function onSeeked(e) {
+    var timestamp = e.target.currentTime;
+    const userData = {
+      "name": user.displayName,
+      "email": user.email,
+      "photoURL": user.photoURL
+    }
+
+    if (parseFloat(timestamp).toFixed(2) !== parseFloat(lastSeekFromServer).toFixed(2)) { // NEW CODE
+      socket.emit("seekdone", { room: room.current, time: e.target.currentTime, userData: userData, type: "info" });
+
+    }
+  }
+
 
   return (
     <Grid container>
@@ -33,7 +71,7 @@ export default function VideoPlayer({ video, onSeeked, handleEvent, roomID }) {
       <Grid item xs={12} >
         <Box color="black" bggradient="linear(to-r, #74ebd5, #ACB6E5)" overflow="hidden" margin="auto" height="70vh">
           {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }} controls={isControl ? true: false}>
-            <source src={video.preview} type="video/mp4" />
+            <source src={video.preview} content='.mkv' type="video/mp4" />
           </video> :
             <iframe id='video'
               title='Youtube player'

@@ -1,23 +1,18 @@
-// import { Button } from '@mui/material'
-// import React from 'react'
-// import CreateParty from './CreateParty'
-// import VideoPlayer from '../Video/VideoPlayer'
-// import VideoLoad from '../Video/VideoLoad'
+import { Button } from '@mui/material'
+import React from 'react'
+import VideoPlayer from '../Video/VideoPlayer'
+import VideoLoad from '../Video/VideoLoad'
+import { useNavigate } from 'react-router-dom'
 
-// export default function JoinParty({room_id_input, roomID, handleInput, join_room, videoLoad}) {
-//   return (
-//     <div>
-//       {roomID? 
-//       <>
-//         <VideoLoad />
-//       </> : 
-//       <>
-//           <input type="text"
-//             value={room_id_input}
-//             name="room"
-//             onChange={handleInput} />
-//           <Button onClick={() => { join_room(room_id_input) }}>Connect</Button>
-//       </>}
-//     </div>
-//   )
-// }
+export default function JoinParty({ data, handleInput, join_room }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <input type="text"
+        value={data.room}
+        name="room"
+        onChange={handleInput} />
+      <Button onClick={() => { join_room(data.room, false, true) }}>Connect</Button>
+    </>
+  )
+}

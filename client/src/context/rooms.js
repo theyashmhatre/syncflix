@@ -10,12 +10,16 @@ export const RoomProvider = ({ children }) => {
   const [messageList, setMessageList] = useState([]);
   const room = useRef("");
   const [usersList, setUsersList] = useState("");
+  const [lastSeekFromServer, setLastSeekFromServer] = useState("");
+
   const state = {
     room,
     usersList,
     setUsersList,
     messageList,
-    setMessageList
+    setMessageList,
+    lastSeekFromServer,
+    setLastSeekFromServer
   }
 
   return (
