@@ -22,7 +22,7 @@ async function getCount(roomID) {
   for (const socket of sockets) {
     users.push(socket.data);
   }
-  io.emit("connections_updated", users);
+  io.to(roomID).emit("connections_updated", users);
 }
 
 function secondsToTime(e) {
@@ -52,6 +52,13 @@ io.on('connection', (socket) => {
     console.log(roomID, id, "connections_updated");
     io.in(id).socketsLeave(roomID);
     await getCount(roomID)
+  })
+
+  socket.on("remove_user", async ({roomID, id, adminID, admin, removed_username}) => {
+    console.log(roomID, id, admin, removed_username, "remove_user");
+    io.in(id).socketsLeave(roomID);
+    await getCount(roomID);
+    io.sockets.in(roomID).emit("room message", { message: `${admin} removed ${removed_username}.`, id: adminID, userData: removed_username, type: 'remove' });
   })
 
   socket.on('disconnect', async (roomID) => {

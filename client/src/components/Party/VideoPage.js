@@ -18,25 +18,41 @@ import { doc, getDoc } from "firebase/firestore";
 export default function VideoPage() {
 
   const { setIsCreate, setIsJoin, videoLoaded, setIsVideo } = useAppStateContext();
-  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList } = useRoomContext()
+  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList, isAdmin, setIsAdmin } = useRoomContext()
   const [video, setVideo] = useState({ preview: "", raw: "", visible: false, link: '' });
   const socket = useContext(SocketContext);
   const [partyExists, setPartyExists] = useState(false)
-  const {user} = useAuth()
+  const { user } = useAuth()
   const { id } = useParams();
   const bottomRef = useRef(null);
   const navigate = useNavigate()
   room.current = id;
   console.log(id, room.current);
+  const [partyData, setPartyData] = useState({});
 
   function join_room() {
-    if (user){
-      const userData = { roomID: room.current, data: { email: user.email, name: user.displayName, photoURL: user.photoURL } }
+    if (user) {
+      const userData = { roomID: room.current, data: { email: user.email, name: user.displayName, photoURL: user.photoURL, id:socket.id } }
       console.log(userData);
       socket.emit("join_room", userData)
       setPartyExists(true)
+
     }
   }
+
+  function update_admin_status() {
+    console.log("partydata", partyData);
+
+    if (!(Object.keys(partyData).length === 0 && partyData.constructor === Object)){   //checking if partydata has values
+      if (partyData.allAdmins.includes(user.email)) {
+        setIsAdmin(true);
+      }
+    }
+  }
+
+  useEffect(() => {
+    update_admin_status()
+  }, [partyData])
 
   useEffect(() => {
     (async () => {
@@ -45,6 +61,10 @@ export default function VideoPage() {
 
       if (partySnap.exists()) {
         console.log(id, "exists");
+        console.log(partySnap.data())
+        console.log(partySnap.data().allAdmins.includes("yashmhatre62@gmail.com"));
+        setPartyData(partySnap.data())
+
       } else {
         console.log("No Such Document.");
         navigate("/error")
@@ -56,7 +76,7 @@ export default function VideoPage() {
   useEffect(() => {
     join_room()
   }, [user])
-  
+
 
   const loadVideo = (e, link) => {
     console.log(room.current)
@@ -124,6 +144,7 @@ export default function VideoPage() {
     if (socket) {
       console.log("socket yes")
       socket.on("room message", ({ message, id, userData, type }) => {
+        console.log(message, id, userData, type, socket.id);
         setMessageList(prev => [...prev, { message, id, userData, type }])
       });
       socket.on("play", (time, message, userData, type) => {
@@ -151,7 +172,6 @@ export default function VideoPage() {
       socket.on("connections_updated", (users) => {
         console.log(users);
         setUsersList([...users])
-        console.log(usersList);
       })
 
       socket.on("ended", (time) => {
@@ -176,14 +196,14 @@ export default function VideoPage() {
 
   return (
     <>
-      {partyExists ? 
-      <>
+      {partyExists ?
+        <>
           <Sidebar />
           <Box sx={{ flexGrow: 1, width: { sm: `calc(100% - ${300}px)` } }}>
 
             <Stack color="black" bgGradient="linear(to-r, #74ebd5, #ACB6E5)" margin="auto" padding={"20px"}>
 
-              <Stack direction="row" justifyContent="space-between" sx={{ p: "0px 0px 10px 0px" }}>
+              <Stack direction="row" justifyContent="space-between" sx={{ p: "0px 0px 10px 0px", mt: '4rem', mb: '1rem' }}>
                 <Stack direction="row" spacing={1} >
                   <Chip avatar={<KeyboardBackspaceIcon />} sx={{ p: "20px 5px", borderRadius: "10px" }} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
                   />
@@ -206,7 +226,7 @@ export default function VideoPage() {
                 <VideoOptions loadVideo={loadVideo} roomID={room.current} />}
             </Stack>
           </Box>
-      </>
+        </>
         : <></>}
     </>
   )

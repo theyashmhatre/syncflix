@@ -84,7 +84,7 @@ export default function VideoPlayer({ video, roomID }) {
       <Stack direction={"row"} width={"100%"} justifyContent={"space-between"} pt="15px">
         <Grid container height="3rem" textAlign={'left'} spacing={2}>
           <Grid item >
-            <Typography ><span style={{ "fontWeight": "900", "fontSize": "large" }}>#{roomID}</span></Typography>
+            <Typography ><span style={{ "fontWeight": "900", "fontSize": "large" }}>A Tryst with Destiny</span></Typography>
           </Grid>
           <Grid item>
             <Tooltip open={open} onClose={handleClose} title="Text Copied!" placement="right">
