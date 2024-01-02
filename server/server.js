@@ -49,7 +49,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on("connections_updated", async ({roomID, id}) => {
-    console.log(roomID, id, "connections_updated");
     io.in(id).socketsLeave(roomID);
     await getCount(roomID)
   })
@@ -59,6 +58,35 @@ io.on('connection', (socket) => {
     io.in(id).socketsLeave(roomID);
     await getCount(roomID);
     io.sockets.in(roomID).emit("room message", { message: `${admin} removed ${removed_username}.`, id: adminID, userData: removed_username, type: 'remove' });
+  })
+
+  socket.on("make_admin", async ({newAdminEmail, adminID, roomID, admin, newAdmin}) => {
+    const sockets = await io.in(roomID).fetchSockets();
+
+    Object.keys(sockets).forEach(key => {
+      let value = sockets[key]["data"]["email"];
+      if (value === newAdminEmail) {
+        sockets[parseInt(key)].data.isAdmin = true;
+      }
+    });
+    await getCount(roomID);
+    if (adminID){
+      io.sockets.in(roomID).emit("room message", { message: `${admin} made ${newAdmin} an admin.`, id: adminID, userData: newAdmin, type: 'update' });
+    }
+  })
+
+  socket.on("remove_admin", async ({ removedAdminEmail, adminID, roomID, admin, removedAdmin }) => {
+    console.log("remove_admin", { removedAdminEmail, roomID, admin, removedAdmin });
+    const sockets = await io.in(roomID).fetchSockets();
+
+    Object.keys(sockets).forEach(key => {
+      let value = sockets[key]["data"]["email"];
+      if (value === removedAdminEmail) {
+        sockets[parseInt(key)].data.isAdmin = false;
+      }
+    });
+    await getCount(roomID);
+    io.sockets.in(roomID).emit("room message", { message: `${admin} removed ${removedAdmin} as an admin.`, id: adminID, userData: removedAdmin, type: 'update' });
   })
 
   socket.on('disconnect', async (roomID) => {
@@ -90,7 +118,6 @@ io.on('connection', (socket) => {
   socket.on("seekdone", async ({ room, time, userData, type }) => {
     const message = `${userData.name} seeked to ${secondsToTime(time)}`
     socket.to(room).emit("seekdone", time, message, userData, type);
-    console.log(socket.rooms);
     let roomUsers = await io.in("help").fetchSockets()
     console.log(roomUsers);
     roomUsers.forEach((obj) => {

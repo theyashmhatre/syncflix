@@ -5,7 +5,6 @@ import VideoLoad from '../Video/VideoLoad'
 import { useNavigate } from 'react-router-dom'
 
 export default function JoinParty({ data, handleInput, join_room }) {
-  const navigate = useNavigate();
   return (
     <>
       <input type="text"

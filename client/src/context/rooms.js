@@ -11,7 +11,9 @@ export const RoomProvider = ({ children }) => {
   const room = useRef("");
   const [usersList, setUsersList] = useState("");
   const [lastSeekFromServer, setLastSeekFromServer] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = useRef(false);
+  const [partyData, setPartyData] = useState({});
+
 
   const state = {
     room,
@@ -22,7 +24,8 @@ export const RoomProvider = ({ children }) => {
     lastSeekFromServer,
     setLastSeekFromServer,
     isAdmin,
-    setIsAdmin
+    partyData,
+    setPartyData
   }
 
   return (

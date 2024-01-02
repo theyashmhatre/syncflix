@@ -27,10 +27,8 @@ export default function MainContent() {
     partyTitle: ""
   })
   const { isCreate, setIsCreate, isJoin, setIsJoin, videoLoaded } = useAppStateContext()
-  const socket = useContext(SocketContext)
   const { user } = useAuth();
   const navigate = useNavigate();
-  var { room } = useRoomContext();
 
   function handleInput(e) {
     e.preventDefault();

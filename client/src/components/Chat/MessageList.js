@@ -29,9 +29,9 @@ export default function MessageList({ bottomRef }) {
                       <OtherChatCard message={msg.message} id={msg.id} userData={msg.userData} />
                       {messageList.length === index ? <></> : <Divider variant="middle" component="li" />}
                     </>
-                  : msg.type === "remove" ?
+                  : msg.type === "update" ?
                     <>
-                      <p><Chip label={socket.id === msg.id ? `You removed ${msg.userData}` : msg.message} sx={{ fontSize: "11px" }} /></p>
+                      <p><Chip label={msg.message} sx={{ fontSize: "11px" }} /></p>
                       <Divider variant="middle" component="li" />
                     </>
                     :

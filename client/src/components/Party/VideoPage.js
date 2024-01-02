@@ -18,7 +18,7 @@ import { doc, getDoc } from "firebase/firestore";
 export default function VideoPage() {
 
   const { setIsCreate, setIsJoin, videoLoaded, setIsVideo } = useAppStateContext();
-  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList, isAdmin, setIsAdmin } = useRoomContext()
+  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList, isAdmin, partyData, setPartyData } = useRoomContext()
   const [video, setVideo] = useState({ preview: "", raw: "", visible: false, link: '' });
   const socket = useContext(SocketContext);
   const [partyExists, setPartyExists] = useState(false)
@@ -27,13 +27,10 @@ export default function VideoPage() {
   const bottomRef = useRef(null);
   const navigate = useNavigate()
   room.current = id;
-  console.log(id, room.current);
-  const [partyData, setPartyData] = useState({});
 
   function join_room() {
     if (user) {
-      const userData = { roomID: room.current, data: { email: user.email, name: user.displayName, photoURL: user.photoURL, id:socket.id } }
-      console.log(userData);
+      const userData = { roomID: room.current, data: { email: user.email, name: user.displayName, photoURL: user.photoURL, id:socket.id} }
       socket.emit("join_room", userData)
       setPartyExists(true)
 
@@ -41,11 +38,11 @@ export default function VideoPage() {
   }
 
   function update_admin_status() {
-    console.log("partydata", partyData);
 
     if (!(Object.keys(partyData).length === 0 && partyData.constructor === Object)){   //checking if partydata has values
       if (partyData.allAdmins.includes(user.email)) {
-        setIsAdmin(true);
+        socket.emit("make_admin", { newAdminEmail: user.email, adminID: '', roomID: room.current, admin: '', newAdmin: '' })
+        isAdmin.current = true; 
       }
     }
   }
@@ -60,9 +57,6 @@ export default function VideoPage() {
       const partySnap = await getDoc(partyRef);
 
       if (partySnap.exists()) {
-        console.log(id, "exists");
-        console.log(partySnap.data())
-        console.log(partySnap.data().allAdmins.includes("yashmhatre62@gmail.com"));
         setPartyData(partySnap.data())
 
       } else {
@@ -170,7 +164,18 @@ export default function VideoPage() {
       });
 
       socket.on("connections_updated", (users) => {
-        console.log(users);
+        console.log(users, partyData);
+        Object.keys(users).forEach(key => {
+          let u = users[key];
+          if (u.id === socket.id) {
+            if (u.isAdmin) {
+              isAdmin.current = true;
+            } else {
+              isAdmin.current = false;
+            }
+          }
+        })
+        
         setUsersList([...users])
       })
 
