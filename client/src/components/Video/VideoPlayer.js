@@ -8,27 +8,28 @@ import { useRoomContext } from '../../context/rooms';
 import { useAppStateContext } from '../../context/appstate';
 import { SocketContext } from '../../context/socket';
 import { useAuth } from '../../context/auth';
+import Settings from '../Settings/Settings';
+import LinkIcon from '@mui/icons-material/Link';
+
 
 export default function VideoPlayer({ video, roomID }) {
 
-  const [open, setOpen] = React.useState(false);
-  const [isControl, setControl] = useState(true);
-  const {usersList} = useRoomContext();
+  const { usersList, partyData } = useRoomContext();
   const socket = useContext(SocketContext);
   const { user } = useAuth();
-  const {room, lastSeekFromServer} = useRoomContext();
+  const { room, lastSeekFromServer } = useRoomContext();
+  const [openTooltip, setOpenTooltip] = useState(false);
 
-  const handleClose = () => {
-    setOpen(false);
+
+  const handleCloseTooltip = () => {
+    setOpenTooltip(false);
   };
 
-  const handleOpen = () => {
-    setOpen(true);
-    console.log(usersList);
-    setControl(!isControl)
+  const handleOpenTooltip = () => {
+    setOpenTooltip(true);
 
     setTimeout(() => {
-      setOpen(false);
+      setOpenTooltip(false);
     }, 3000);
   };
 
@@ -67,10 +68,10 @@ export default function VideoPlayer({ video, roomID }) {
 
   return (
     <Grid container>
-      
+
       <Grid item xs={12} >
         <Box color="black" bggradient="linear(to-r, #74ebd5, #ACB6E5)" overflow="hidden" margin="auto" height="70vh">
-          {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }} controls={isControl ? true: false}>
+          {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }}>
             <source src={video.preview} content='.mkv' type="video/mp4" />
           </video> :
             <iframe id='video'
@@ -81,25 +82,32 @@ export default function VideoPlayer({ video, roomID }) {
         </Box>
       </Grid>
 
-      <Stack direction={"row"} width={"100%"} justifyContent={"space-between"} pt="15px">
-        <Grid container height="3rem" textAlign={'left'} spacing={2}>
-          <Grid item >
-            <Typography ><span style={{ "fontWeight": "900", "fontSize": "large" }}>A Tryst with Destiny</span></Typography>
-          </Grid>
-          <Grid item>
-            <Tooltip open={open} onClose={handleClose} title="Text Copied!" placement="right">
-              <ContentCopyIcon fontSize='medium' style={{ "color": "grey" }} onClick={() => { navigator.clipboard.writeText(roomID); handleOpen() }} sx={{ ":hover": { cursor: "pointer" } }} />
+      <Box display={"flex"} justifyContent={"self"} alignItems={"center"}>
+        <Box>
+          <Stack direction={"column"}>
+            <Typography sx={{ ml: "10px", fontWeight:"900", fontSize:"large" }} >{partyData.title}</Typography>
+            <Stack direction={"row"}>
+              <Avatar alt="James Phelps" src={partyData.admin.photoURL} />
+              <Typography textAlign={"center"}>{partyData.admin.name}</Typography>
+            </Stack>
+          </Stack>
+        </Box>
+        <Box>
+          <Stack direction={"row"}>
+            <Tooltip open={openTooltip} onClose={handleCloseTooltip} title="Text Copied!" placement="bottom">
+              <Stack direction={"row"} display={"flex"} spacing={1}
+                onClick={() => { navigator.clipboard.writeText("https://localhost:3000/party" + room.current); handleOpenTooltip() }}
+                justifyContent={"center"} p="8px 2px" borderRadius={"10px"}
+                boxShadow={"rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px"}
+                color="white" alignItems={"center"} bgcolor={"#8C52FF"}>
+                <LinkIcon fontSize='small' />
+                <Typography color="white" fontSize={"small"}>Copy Link</Typography>
+              </Stack>
             </Tooltip>
-          </Grid>
-        </Grid>
-
-
-        <Grid item >
-          <IconButton sx={{ "borderRadius": "5px", "backgroundColor": "#8C52FF" }}>
-            <SettingsIcon style={{ "color": "white" }} />
-          </IconButton>
-        </Grid>
-      </Stack>
+            <Settings />
+          </Stack>
+        </Box>
+      </Box>
 
     </Grid>
   )

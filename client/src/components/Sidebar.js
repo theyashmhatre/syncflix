@@ -55,12 +55,13 @@ export default function Sidebar() {
         <List sx={{ width: '100%', mt: "3.5rem", mb: "3rem", maxWidth: 360 }}>
           <Box position="sticky" top="4rem" width={drawerWidth} zIndex={3} >
             <Stack direction="row">
-              <Box p="15px 0px" display="flex" borderBottom={sideSection === "chat"? "" : "1px solid grey"} bgcolor={sideSection === "chat" ? "white" : grey[200]} justifyContent={'center'} width={"50%"} sx={{ ":hover": { cursor: "pointer" }, '&:hover .chat-icon': { color: sideSection === "people" ? "#8C52FF" : "gray" } }} onClick={(e) => toggleSection("chat")} >
-                {/* <Badge badgeContent={5} color="success" anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}> */}
-                <ChatIcon className='chat-icon' sx={{ color: sideSection === "chat" ? "#8C52FF" : "gray" }}/>
+              <Box p="15px 0px" display="flex" borderBottom={sideSection === "chat" ? "" : "1px solid grey"} bgcolor={sideSection === "chat" ? "white" : grey[200]}
+                justifyContent={'center'}
+                width={"50%"}
+                sx={{ ":hover": { cursor: "pointer" }, '&:hover .chat-icon': { color: sideSection === "people" ? "#8C52FF" : "gray" } }}
+                onClick={(e) => toggleSection("chat")} >
+
+                <ChatIcon className='chat-icon' sx={{ color: sideSection === "chat" ? "#8C52FF" : "gray" }} />
                 {/* </Badge>  */}
 
               </Box>
