@@ -179,6 +179,12 @@ export default function VideoPage() {
         setUsersList([...users])
       })
 
+      socket.on("removed", () => {
+        console.log("removed");
+        alert("Oops! You have been removed from the party.")
+        navigate("/");
+      })
+
       socket.on("ended", (time) => {
         console.log("ended", time);
       });

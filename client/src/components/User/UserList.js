@@ -23,7 +23,7 @@ export default function UserList() {
   function remove_user(remove_id, name) {
     console.log(socket.id);
     if (isAdmin.current && remove_id !== socket.id) {
-      socket.emit("remove_user", { id: remove_id, adminID: socket.id, roomID: room.current, admin: user.displayName, removed_username: name });
+      socket.emit("remove_user", { id: remove_id, adminID: socket.id, roomID: room.current, adminName: user.displayName, removedUsername: name });
     }
   }
 
@@ -113,7 +113,9 @@ export default function UserList() {
                     <Tooltip title="Remove User">
                       <Checkbox disabled={(user.id === socket.id) || !isAdmin.current ? true : false}
 
-                        icon={<RemoveCircleOutlineOutlinedIcon sx={{ fontSize: 25 }} />} onClick={() => { remove_user(user.id, user.name) }} />
+                        icon={<RemoveCircleOutlineOutlinedIcon sx={{ fontSize: 25 }} />}
+                        checkedIcon={<RemoveCircleOutlineOutlinedIcon sx={{ fontSize: 25 }} />}
+                        onClick={() => { remove_user(user.id, user.name) }} />
                     </Tooltip>
 
                   </>

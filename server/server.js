@@ -41,26 +41,27 @@ io.on('connection', (socket) => {
     io.emit("message", msg.msg);
   });
 
-  socket.on("join_room", async ({roomID, data}) => {
+  socket.on("join_room", async ({ roomID, data }) => {
     socket.data = data
     socket.join(roomID);
     console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
     await getCount(roomID);
   });
 
-  socket.on("connections_updated", async ({roomID, id}) => {
+  socket.on("connections_updated", async ({ roomID, id }) => {
     io.in(id).socketsLeave(roomID);
     await getCount(roomID)
   })
 
-  socket.on("remove_user", async ({roomID, id, adminID, admin, removed_username}) => {
-    console.log(roomID, id, admin, removed_username, "remove_user");
+  socket.on("remove_user", async ({ roomID, id, adminID, adminName, removedUsername }) => {
+    console.log(roomID, id, adminName, removedUsername, "remove_user");
     io.in(id).socketsLeave(roomID);
     await getCount(roomID);
-    io.sockets.in(roomID).emit("room message", { message: `${admin} removed ${removed_username}.`, id: adminID, userData: removed_username, type: 'remove' });
+    io.sockets.in(roomID).emit("room message", { message: `${adminName} removed ${removedUsername}.`, id: adminID, userData: removedUsername, type: 'remove' });
+    io.sockets.in(id).emit("removed")
   })
 
-  socket.on("make_admin", async ({newAdminEmail, adminID, roomID, admin, newAdmin}) => {
+  socket.on("make_admin", async ({ newAdminEmail, adminID, roomID, admin, newAdmin }) => {
     const sockets = await io.in(roomID).fetchSockets();
 
     Object.keys(sockets).forEach(key => {
@@ -70,7 +71,7 @@ io.on('connection', (socket) => {
       }
     });
     await getCount(roomID);
-    if (adminID){
+    if (adminID) {
       io.sockets.in(roomID).emit("room message", { message: `${admin} made ${newAdmin} an admin.`, id: adminID, userData: newAdmin, type: 'update' });
     }
   })
