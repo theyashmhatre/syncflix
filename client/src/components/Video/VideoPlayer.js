@@ -14,10 +14,9 @@ import LinkIcon from '@mui/icons-material/Link';
 
 export default function VideoPlayer({ video, roomID }) {
 
-  const { usersList, partyData } = useRoomContext();
+  const { usersList, partyData, room, lastSeekFromServer, controlSwitch, isAdmin } = useRoomContext();
   const socket = useContext(SocketContext);
   const { user } = useAuth();
-  const { room, lastSeekFromServer } = useRoomContext();
   const [openTooltip, setOpenTooltip] = useState(false);
 
 
@@ -40,7 +39,6 @@ export default function VideoPlayer({ video, roomID }) {
       "email": user.email,
       "photoURL": user.photoURL
     }
-    console.log(`handleEvent ${event.type}\n ${event.target.currentTime} ${event.target.playbackRate}`);
 
     if (event.type === "ratechange") {
 
@@ -71,7 +69,8 @@ export default function VideoPlayer({ video, roomID }) {
 
       <Grid item xs={12} >
         <Box color="black" bggradient="linear(to-r, #74ebd5, #ACB6E5)" overflow="hidden" margin="auto" height="70vh">
-          {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} onPause={handleEvent} height="100%" width={"100%"} style={{ "objectFit": "cover" }}>
+          {video.preview ? <video id="video" onEnded={handleEvent} onRateChange={handleEvent} onSeeking={onSeeked} onPlay={handleEvent} 
+          onPause={handleEvent} height="100%" width={"100%"} controls={isAdmin.current? true : controlSwitch === "public"? true : false} style={{ "objectFit": "cover" }}>
             <source src={video.preview} content='.mkv' type="video/mp4" />
           </video> :
             <iframe id='video'
@@ -82,31 +81,33 @@ export default function VideoPlayer({ video, roomID }) {
         </Box>
       </Grid>
 
-      <Box display={"flex"} justifyContent={"self"} alignItems={"center"}>
-        <Box>
-          <Stack direction={"column"}>
-            <Typography sx={{ ml: "10px", fontWeight:"900", fontSize:"large" }} >{partyData.title}</Typography>
-            <Stack direction={"row"}>
-              <Avatar alt="James Phelps" src={partyData.admin.photoURL} />
-              <Typography textAlign={"center"}>{partyData.admin.name}</Typography>
-            </Stack>
-          </Stack>
-        </Box>
-        <Box>
-          <Stack direction={"row"}>
+      <Box width={"100%"} mt="10px" >
+        <Stack direction={"row"} justifyContent="space-between" >
+          <Typography sx={{fontWeight: "900", fontSize: "24px" }} display={"flex"} justifyContent={"center"} alignItems={"center"} >{partyData.title}</Typography>
+          <Stack direction={"row"} spacing={2}>
             <Tooltip open={openTooltip} onClose={handleCloseTooltip} title="Text Copied!" placement="bottom">
+
               <Stack direction={"row"} display={"flex"} spacing={1}
-                onClick={() => { navigator.clipboard.writeText("https://localhost:3000/party" + room.current); handleOpenTooltip() }}
-                justifyContent={"center"} p="8px 2px" borderRadius={"10px"}
+                border={"1px solid #8C52FF"}
+                sx={{ cursor:"pointer" }}
+                onClick={() => { navigator.clipboard.writeText("http://localhost:3000/party/" + room.current); handleOpenTooltip() }}
+                justifyContent={"center"} p="8px 5px" borderRadius={"5px"}
                 boxShadow={"rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px"}
-                color="white" alignItems={"center"} bgcolor={"#8C52FF"}>
+                color="#8C52FF" alignItems={"center"}>
                 <LinkIcon fontSize='small' />
-                <Typography color="white" fontSize={"small"}>Copy Link</Typography>
+                <Typography color="#8C52FF" fontSize={"small"}>Copy Link</Typography>
               </Stack>
+
             </Tooltip>
             <Settings />
           </Stack>
-        </Box>
+        </Stack>
+      </Box>
+      <Box>
+        <Stack direction={"row"} spacing={1} ml="2px">
+          <Avatar alt="James Phelps" src={partyData.admin.photoURL} sx={{ width: 24, height: 24 }} />
+          <Typography textAlign={"center"} fontSize={"15px"}>{partyData.admin.name}</Typography>
+        </Stack>
       </Box>
 
     </Grid>

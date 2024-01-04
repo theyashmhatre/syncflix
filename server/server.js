@@ -90,6 +90,10 @@ io.on('connection', (socket) => {
     io.sockets.in(roomID).emit("room message", { message: `${admin} removed ${removedAdmin} as an admin.`, id: adminID, userData: removedAdmin, type: 'update' });
   })
 
+  socket.on("video controls", async ({control, adminID, roomID}) => {
+    io.sockets.in(roomID).emit("video controls", {control: control})
+  })
+
   socket.on('disconnect', async (roomID) => {
     console.log('A disconnection has been made')
   })

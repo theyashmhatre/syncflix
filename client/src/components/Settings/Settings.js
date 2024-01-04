@@ -1,9 +1,9 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useContext, useState } from 'react'
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Box, Button, Divider, Grid, IconButton, Paper, Stack, Tooltip } from '@mui/material';
+import { Alert, Box, Button, Divider, Grid, IconButton, Paper, Snackbar, Stack, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
@@ -12,6 +12,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import PublicIcon from '@mui/icons-material/Public';
 import { grey } from '@mui/material/colors';
 import { useRoomContext } from '../../context/rooms';
+import { SocketContext } from '../../context/socket';
 
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -25,9 +26,10 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function Settings() {
 
-  const [open, setOpen] = React.useState(false);
-  const [controlSwitch, setControlSwitch] = useState("admins")
-  const { room } = useRoomContext()
+  const [open, setOpen] = useState(false);
+  const [openAlert, setOpenAlert] = useState(false);
+  const socket = useContext(SocketContext);
+  const { room, isAdmin, controlSwitch, setControlSwitch } = useRoomContext()
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -36,11 +38,32 @@ export default function Settings() {
     setOpen(false);
   };
 
+  function toggleVideoControls(control) {
+    if (!isAdmin.current){
+      setOpenAlert(true)
+      return;
+    }
+
+    socket.emit("video controls", {control: control, adminID: socket.id, roomID: room.current})
+    setControlSwitch(control);
+    
+  }
+
   return (
     <Fragment>
-      <IconButton sx={{ "borderRadius": "5px", "backgroundColor": "#8C52FF", boxShadow: "rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px" }} onClick={handleClickOpen}>
-        <SettingsIcon style={{ "color": "white" }} />
+      <IconButton sx={{
+        borderRadius: "5px", backgroundColor: "#8C52FF",
+        boxShadow: "rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px", ":hover": { bgcolor: "white" }, '&:hover .setting-icon': { color: "#8C52FF" },
+        transition: "0.5s"
+      }}
+        onClick={handleClickOpen}>
+        <SettingsIcon className='setting-icon' sx={{ color:"white",":hover":{color:"white"}}} />
       </IconButton>
+      <Snackbar open={openAlert} autoHideDuration={2000} onClose={()=>{setOpenAlert(false)}} anchorOrigin={{vertical:'bottom',horizontal:'right'}}>
+        <Alert onClose={() => { setOpenAlert(false)}} severity="error" sx={{ width: '100%' }}>
+          Only Admins are allowed to toggle controls!
+        </Alert>
+      </Snackbar>
       <BootstrapDialog
         onClose={handleClose}
         aria-labelledby="customized-dialog-title"
@@ -64,43 +87,18 @@ export default function Settings() {
           <CloseIcon />
         </IconButton>
         <DialogContent dividers>
-          {/* <Grid container display={"flex"} alignItems={"center"}>
-            <Grid item xs={9} >
-              <Box border={"1px solid"} borderColor={grey[400]} p="5px" width={"95%"} borderRadius={"5px"}>
-                <Typography fontSize={"14px"} fontWeight={600}><Typography color={grey[500]} display={"inline"}>https://localhost:3000/party/</Typography>{room.current}</Typography>
-              </Box>
-            </Grid>
-
-            <Grid item xs={3} sx={{ ":hover": { cursor: "pointer" } }}>
-              <Tooltip open={openTooltip} onClose={handleCloseTooltip} title="Text Copied!" placement="bottom">
-                <Stack direction={"row"} display={"flex"} spacing={1}
-                  onClick={() => { navigator.clipboard.writeText("https://localhost:3000/party" + room.current); handleOpenTooltip() }}
-                  justifyContent={"center"} p="8px 2px" borderRadius={"10px"}
-                  boxShadow={"rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px"}
-                  color="white" alignItems={"center"} bgcolor={"#8C52FF"}>
-                  <LinkIcon fontSize='small' />
-                  <Typography color="white" fontSize={"small"}>Copy Link</Typography>
-                </Stack>
-              </Tooltip>
-            </Grid>
-          </Grid>
-
-          <Typography m={"30px 0px 8px 0px"} fontWeight={600} display={"flex"} justifyContent={"center"} alignItems={"center"} alignContent={"center"}>
-            Video Controls
-          </Typography> */}
 
           <Box display={"flex"} justifyContent={"center"} alignItems={"center"} mt="10px">
             <Stack direction={"row"} width={"80%"} border={"2px solid"} borderColor={grey[400]} borderRadius={"10px"} bgcolor={grey[300]}
               sx={{ ":hover": { cursor: "pointer" } }}
             >
               <Box p="5px 0px" display={"flex"}
-                // border={controlSwitch === "admins" ? "1px solid black" : ""}
                 borderRadius={controlSwitch === "admins" ? "10px" : ""}
                 color={controlSwitch === "admins" ? "black" : grey[500]}
                 bgcolor={controlSwitch === "admins" ? "white" : ""}
                 justifyContent={"center"} width={"50%"}
                 sx={{ transition: "0.5s" }}
-                onClick={() => { setControlSwitch("admins") }}
+                onClick={() => { toggleVideoControls("admins") }}
               >
                 <PeopleIcon />
               </Box>
@@ -109,7 +107,7 @@ export default function Settings() {
                 color={controlSwitch === "public" ? "black" : grey[500]}
                 bgcolor={controlSwitch === "public" ? "white" : ""}
                 sx={{ transition: "0.5s" }}
-                onClick={() => { setControlSwitch("public") }}
+                onClick={() => { toggleVideoControls("public") }}
               >
                 <PublicIcon />
               </Box>

@@ -10,7 +10,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState()
+  const [user, setUser] = useState();
   const [loading, setLoading] = useState(true)
 
   const handleLogin = () => {
@@ -42,8 +42,10 @@ export function AuthProvider({ children }) {
       // Sign-out successful.
       console.log("Signed out successfully")
       setUser(null);
+      return true;
     }).catch((error) => {
       console.log("Unsuccessful signout")
+      return false
     });
   }
 
@@ -63,24 +65,20 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
-        const uid = user.uid;
-        setUser(user);
-      } else {
-        // User is signed out
-        // ...
-        setUser(null)
-        console.log("user is logged out")
-      }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
     });
+
+    return () => {
+      unsubscribe();
+    };
 
   }, [])
 
   const value = {
     user,
+    loading,
     getUser,
     handleLogin,
     handleLogout

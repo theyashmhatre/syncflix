@@ -4,6 +4,7 @@ import MainContent from './components/MainContent';
 import Navbar from './components/Navbar';
 import Create from './components/Party/Create';
 import VideoPage from './components/Party/VideoPage';
+import ProtectedRoute from './components/Routes/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import { useAppStateContext } from './context/appstate';
 import {
@@ -30,11 +31,15 @@ function App() {
             path="/"
             element={<MainContent />}
           ></Route>
-          <Route
+          {/* <Route
             exact
             path="/party/:id"
             element={<VideoPage />}
-          ></Route>
+          ></Route> */}
+          {/* <ProtectedRoute element={<VideoPage />} path="/party/:id" exact /> */}
+          <Route element={<ProtectedRoute />}>
+            <Route path='/party/:id' element={<VideoPage />} />
+          </Route>
           <Route
             exact
             path="/error"

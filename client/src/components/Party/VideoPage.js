@@ -13,12 +13,13 @@ import { SocketContext } from '../../context/socket';
 import { useAuth } from '../../context/auth';
 import { db } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 
 export default function VideoPage() {
 
   const { setIsCreate, setIsJoin, videoLoaded, setIsVideo } = useAppStateContext();
-  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList, isAdmin, partyData, setPartyData } = useRoomContext()
+  const { usersList, room, messageList, setMessageList, setLastSeekFromServer, setUsersList, isAdmin, partyData, setPartyData, setControlSwitch } = useRoomContext()
   const [video, setVideo] = useState({ preview: "", raw: "", visible: false, link: '' });
   const socket = useContext(SocketContext);
   const [partyExists, setPartyExists] = useState(false)
@@ -51,6 +52,7 @@ export default function VideoPage() {
     update_admin_status()
   }, [partyData])
 
+
   useEffect(() => {
     (async () => {
       const partyRef = doc(db, "Parties", id);
@@ -73,7 +75,6 @@ export default function VideoPage() {
 
 
   const loadVideo = (e, link) => {
-    console.log(room.current)
     if (link) {
       setVideo(video => {
         return {
@@ -125,7 +126,6 @@ export default function VideoPage() {
     const handleTabClose = event => {
       event.preventDefault();
 
-      console.log(`beforeunload event triggeredx ${room.current}.`);
       socket.emit("connections_updated", { roomID: room.current, id: socket.id })
       socket.disconnect();
 
@@ -136,9 +136,7 @@ export default function VideoPage() {
     window.addEventListener('beforeunload', handleTabClose);
 
     if (socket) {
-      console.log("socket yes")
       socket.on("room message", ({ message, id, userData, type }) => {
-        console.log(message, id, userData, type, socket.id);
         setMessageList(prev => [...prev, { message, id, userData, type }])
       });
       socket.on("play", (time, message, userData, type) => {
@@ -148,7 +146,6 @@ export default function VideoPage() {
         pause()
       });
       socket.on("seekdone", (timestamp, message, userData, type) => {
-        console.log("server seeked seekdone", timestamp, message);
         setLastSeekFromServer(timestamp)
         if (videoLoaded.current) {
           document.getElementById("video").currentTime = timestamp;
@@ -158,13 +155,12 @@ export default function VideoPage() {
       });
 
       socket.on("ratechange", (speed, message, userData, type) => {
-        console.log("playback speed received ", speed)
         document.getElementById("video").playbackRate = speed;
         setMessageList(prev => [...prev, { message, userData, type }])
       });
 
       socket.on("connections_updated", (users) => {
-        console.log(users, partyData);
+        
         Object.keys(users).forEach(key => {
           let u = users[key];
           if (u.id === socket.id) {
@@ -175,12 +171,14 @@ export default function VideoPage() {
             }
           }
         })
-        
         setUsersList([...users])
       })
 
+      socket.on("video controls", ({control}) => {
+        setControlSwitch(control);
+      })
+
       socket.on("removed", () => {
-        console.log("removed");
         alert("Oops! You have been removed from the party.")
         navigate("/");
       })
@@ -214,9 +212,9 @@ export default function VideoPage() {
 
             <Stack color="black" bgGradient="linear(to-r, #74ebd5, #ACB6E5)" margin="auto" padding={"20px"}>
 
-              <Stack direction="row" justifyContent="space-between" sx={{ p: "0px 0px 10px 0px", mt: '4rem', mb: '1rem' }}>
+              <Stack direction="row" justifyContent="space-between" sx={{ p: "0px 0px 10px 0px", mt: '4rem', mb: '0.3rem' }}>
                 <Stack direction="row" spacing={1} >
-                  <Chip avatar={<KeyboardBackspaceIcon />} sx={{ p: "20px 5px", borderRadius: "10px" }} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false) }}
+                  <Chip avatar={<KeyboardBackspaceIcon />} sx={{ p: "20px 5px", borderRadius: "10px" }} label="Back" variant='outlined' onClick={() => { setIsCreate(false); setIsJoin(false); navigate("/") }}
                   />
                 </Stack>
                 <AvatarGroup max={4} total={usersList.length}>

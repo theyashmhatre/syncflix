@@ -15,6 +15,7 @@ import { Grid, Stack } from '@mui/material';
 import { signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import {auth} from "../firebase";
 import { useAuth } from '../context/auth';
+import { useNavigate } from 'react-router-dom';
 const provider = new GoogleAuthProvider();
 
 const settings = ['Logout'];
@@ -23,6 +24,7 @@ function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const {user, getUser, handleLogin, handleLogout} = useAuth()
+  const navigate = useNavigate();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -38,6 +40,12 @@ function ResponsiveAppBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  const logout = async () => {
+    if (await handleLogout()) {
+      navigate("/")
+    }
+  }
 
   
 
@@ -79,7 +87,7 @@ function ResponsiveAppBar() {
                   open={Boolean(anchorElUser)}
                   onClose={handleCloseUserMenu}
                 >
-                  <MenuItem onClick={user? handleLogout: handleLogin}>
+                  <MenuItem onClick={user? logout: handleLogin}>
                     <Typography textAlign="center">{user? "Logout": "Login"}</Typography>
                   </MenuItem>
                 </Menu>
